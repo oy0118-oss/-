@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>敘川｜基隆河港城市風貌再造 - 畢業設計正式提案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #f4f1ea;
+            --color-accent: #10b981;
+            --color-amber: #92400e;
+            --color-stone: #1c1917;
+            --color-ink: #292524;
+        }
+
+        body { font-family: 'Noto Serif TC', serif; background-color: var(--color-bg); scroll-behavior: smooth; color: var(--color-ink); }
+        
+        .paper-texture {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; opacity: 0.08;
+            background-image: url('https://www.transparenttextures.com/patterns/recycled-paper.png');
+            z-index: 100;
+        }
+
+        /* 懷舊照片樣式 - 用於基地概況 */
+        .old-photo {
+            filter: sepia(0.2) contrast(1.05);
+            border: 1px solid #d1c7b7; padding: 12px;
+            background: white; box-shadow: 4px 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.5s ease;官道串聯官道串聯官道串聯
+            position: relative;
+            overflow: hidden;
+        }
+        .old-photo:hover { filter: sepia(0); transform: translateY(-4px); }
+        .old-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .img-placeholder {
+            background: #e8e3da;
+            display: flex; align-items: center; justify-content: center;
+            color: #a09080; font-size: 11px; text-align: center;
+            font-style: italic; line-height: 1.6; padding: 12px;
+            min-height: 120px;
+        }
+
+        .section-title { position: relative; display: inline-block; }
+        .section-title::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 2px; background: var(--color-amber);
+        }
+
+        .fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hotspot { cursor: pointer; transition: all 0.3s ease; stroke: white; stroke-width: 2; }
+        .hotspot:hover { r: 18; fill: var(--color-amber); }
+
+        .layer-stack {
+            transition: all 0.5s ease; cursor: pointer;
+            filter: grayscale(1) opacity(0.6);
+        }
+        .layer-stack:hover, .layer-stack.active { filter: grayscale(0) opacity(1); transform: scale(1.02); }
+
+        /* ── 設計手法視覺疊加視窗 ── */
+        .zs-visual-stack { 
+            position: relative; 
+            background: #000; 
+            min-height: 800px; 
+            border-radius: 2px; 
+            overflow: hidden; 
+        }
+
+        /* 修正主背景：完全原圖呈現 (Opacity 1, 無濾鏡) */
+        .zs-gallery-bg { position: absolute; inset: 0; z-index: 1; cursor: zoom-in; background: #000; }
+        .zs-gallery-bg img { 
+            width: 100%; height: 100%; object-fit: cover; 
+            opacity: 1 !important; 
+            filter: none !important; 
+            transition: opacity 0.3s ease; 
+        }
+
+        /* 20張圖生成動畫視窗 (16:9 左下角) */
+        .zs-anim-overlay {
+            position: absolute; bottom: 30px; left: 30px; z-index: 20;
+            width: 28%; min-width: 320px; aspect-ratio: 16 / 9; 
+            background: #000; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.15); overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        .zs-anim-label {
+            position: absolute; top: 10px; left: 10px; z-index: 25; pointer-events: none;
+            background: rgba(0,0,0,0.6); padding: 3px 8px; backdrop-blur: 4px;
+            border-left: 2px solid var(--color-accent);
+        }
+        .zs-anim-label h6 { color: var(--color-accent); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 900; }
+
+        /* 解說文字條 (極簡化，不遮擋圖面) */
+        .zs-anim-caption-box {
+            position: absolute; bottom: 35px; left: 0; right: 0;
+            padding: 6px 12px; background: rgba(0,0,0,0.7); backdrop-blur: 5px;
+            border-top: 1px solid rgba(255,255,255,0.05); z-index: 21;
+        }
+        #zs-anim-desc { color: rgba(255,255,255,0.9); font-size: 10px; line-height: 1.3; letter-spacing: 0.03em; }
+
+        .zs-frames-container { flex: 1; overflow: hidden; position: relative; }
+        .zs-frames { display: flex; transition: transform 0.15s ease-out; height: 100%; }
+        .zs-frame { min-width: 100%; position: relative; }
+        .zs-frame img { width: 100%; height: 100%; object-fit: cover; filter: none !important; opacity: 1 !important; }
+        
+        .zs-anim-controls {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 12px; background: #000; z-index: 22;
+        }
+        .zs-dots { display: flex; gap: 1px; flex: 1; overflow: hidden; }
+        .zs-dot { height: 2px; flex: 1; background: rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
+        .zs-dot.active { background: var(--color-accent); }
+
+        /* 右下縮圖導覽 (原圖呈現) */
+        .zs-gallery-nav {
+            position: absolute; bottom: 30px; right: 30px; z-index: 20;
+            display: flex; gap: 8px; padding: 10px; 
+            background: rgba(0,0,0,0.6); backdrop-blur: 10px;
+            max-width: 55%; overflow-x: auto;
+            scrollbar-width: thin; scrollbar-color: var(--color-accent) transparent;
+        }
+        .zs-gallery-nav::-webkit-scrollbar { height: 4px; }
+        .zs-gallery-nav::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 2px; }
+        
+        .zs-thumb-card { 
+            min-width: 85px; height: 55px; flex-shrink: 0;
+            cursor: pointer; opacity: 0.8; transition: all 0.3s ease; 
+            border: 1px solid rgba(255,255,255,0.2); overflow: hidden; 
+            filter: none !important;
+        }
+        .zs-thumb-card:hover { opacity: 1; transform: translateY(-2px); }
+        .zs-thumb-card.active { opacity: 1; border-color: var(--color-accent); border-width: 2px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        .zs-thumb-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .zs-persp-info {
+            position: absolute; top: 30px; right: 30px; z-index: 20;
+            text-align: right; pointer-events: none;
+        }
+        #zs-persp-title { color: white; font-size: 18px; font-weight: bold; letter-spacing: 0.2em; text-shadow: 0 2px 15px rgba(0,0,0,1); text-transform: uppercase; }
+        #zs-persp-desc { color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 5px; max-width: 350px; margin-left: auto; text-shadow: 0 1px 5px rgba(0,0,0,0.8); }
+
+        #lightbox {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.95); justify-content: center; align-items: center; cursor: zoom-out;
+        }
+        #lightbox img { max-width: 92%; max-height: 92%; box-shadow: 0 0 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); }
+
+        .img-label { font-size: 9px; font-weight: bold; color: #92400e; letter-spacing: 0.15em; text-transform: uppercase; border: 1px solid #92400e; padding: 2px 8px; display: inline-block; margin-bottom: 8px; }
+        .caption { font-size: 10px; color: #7a6a58; text-align: center; margin-top: 10px; font-style: italic; letter-spacing: 0.05em; line-height: 1.5; }
+
+        .diagnostic-box { border: 1px solid #d1c7b7; background: rgba(255,255,255,0.4); padding: 24px; position: relative; }
+
+        /* ── 參、問題策略 專屬樣式 ── */
+        .strategy-section {
+            background: #1c1917;
+            color: #f4f1ea;
+        }
+        .strategy-problem-card {
+            border: 1px solid rgba(146,64,14,0.3);
+            background: rgba(255,255,255,0.03);
+            padding: 20px 24px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .strategy-problem-card:hover {
+            border-color: rgba(146,64,14,0.7);
+            background: rgba(255,255,255,0.06);
+        }
+        .strategy-problem-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 2px;
+            background: #92400e;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .strategy-problem-card:hover::before { opacity: 1; }
+
+        .strategy-solution-card {
+            border: 1px solid rgba(16,185,129,0.2);
+            background: rgba(16,185,129,0.04);
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .strategy-solution-card:hover {
+            border-color: rgba(16,185,129,0.4);
+            background: rgba(16,185,129,0.08);
+        }
+        .strategy-solution-num {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #10b981;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .axis-line {
+            height: 2px;
+            background: linear-gradient(90deg, #92400e 0%, #10b981 100%);
+            position: relative;
+            margin: 12px 0;
+        }
+        .axis-line::after {
+            content: '▶';
+            position: absolute;
+            right: -8px;
+            top: -8px;
+            font-size: 10px;
+            color: #10b981;
+        }
+        .zone-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border: 1px solid rgba(146,64,14,0.4);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            color: rgba(244,241,234,0.7);
+            transition: all 0.25s;
+            cursor: default;
+        }
+        .zone-badge:hover {
+            border-color: rgba(146,64,14,0.9);
+            color: #f4f1ea;
+            background: rgba(146,64,14,0.1);
+        }
+        .zone-badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="text-stone-800 antialiased overflow-x-hidden">
+
+<div class="paper-texture"></div>
+
+<!-- 燈箱系統 -->
+<div id="lightbox" onclick="this.style.display='none'">
+    <img id="lightbox-img" src="" alt="放大預覽">
+</div>
+
+<nav class="fixed top-0 w-full z-50 bg-[#f4f1ea]/95 backdrop-blur-sm border-b border-stone-300">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="text-2xl font-bold tracking-widest text-stone-900 uppercase">敘川 <span class="text-[10px] font-light text-stone-500 ml-2 italic tracking-normal">Narrating the River</span></div>
+        <div class="hidden md:flex space-x-6 text-[10px] font-bold tracking-[0.2em] uppercase">
+            <a href="#intro" class="hover:text-amber-800 transition">壹 · 基地概況</a>
+            <a href="#analysis" class="hover:text-amber-800 transition">貳 · 基地分析</a>
+            <a href="#strategy" class="hover:text-amber-800 transition">參 · 問題策略</a>
+            <a href="#design" class="hover:text-amber-800 transition">肆 · 設計手法</a>
+            <a href="#future" class="hover:text-amber-800 transition">伍 · 展望</a>
+        </div>
+    </div>
+</nav>
+
+<!-- 首頁視覺 -->
+<header class="relative h-screen flex items-center justify-center bg-stone-950 overflow-hidden">
+    <div class="absolute inset-0 z-0 opacity-25 grayscale hover:grayscale-0 transition-all duration-1000" 
+         style="background-image: url('https://images.unsplash.com/photo-1544013583-1d98a0ae991d?auto=format&fit=crop&q=80&w=2000'); background-size: cover; background-position: center;"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-stone-950/40 via-transparent to-stone-950/80 z-1"></div>
+    <div class="relative z-10 text-center px-6">
+        <div class="border-double border-4 border-stone-500 p-12 md:p-24 inline-block bg-stone-950/10 backdrop-blur-[1px] fade-in-up">
+            <h1 class="text-7xl md:text-9xl font-bold tracking-[0.4em] text-stone-100 mb-6 uppercase">敘川</h1>
+            <p class="text-lg md:text-xl font-light tracking-[0.6em] text-stone-400 uppercase italic">尋找失落的地景</p>
+            <div class="mt-12 h-[1px] w-12 bg-amber-600 mx-auto"></div>
+            <p class="mt-6 text-stone-500 text-[10px] tracking-[0.3em]">基隆河港城市風貌再造 | 2024 畢業設計提案</p>
+        </div>
+    </div>
+</header>
+
+<!-- 壹、基地概況 -->
+<section id="intro" class="py-24 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+        <span class="text-[10px] font-bold tracking-[0.4em] text-amber-900 uppercase block mb-3">Chapter I</span>
+        <h3 class="text-4xl font-bold text-stone-900 section-title">基地概況介紹</h3>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-10">
+        <!-- 基地所在地 -->
+        <div class="bg-white/50 p-8 border border-stone-200 shadow-sm rounded-sm flex flex-col justify-center">
+            <h4 class="font-bold text-lg mb-6 flex items-center">
+                <span class="w-8 h-[1px] bg-amber-900 mr-4"></span> 基地位置與範圍
+            </h4>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <div class="old-photo"><div class="img-placeholder aspect-square"><img src="基地位置/基地圖.png" alt="位置圖" onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">北台灣入口之都</p>
+                </div>
+                <div>
+                    <div class="old-photo"><div class="img-placeholder aspect-square"><img src="基地位置/基地涵構分析.png" alt="範圍圖" onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">仁愛區核心地帶</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <div class="old-photo">
+                    <div class="img-placeholder aspect-video">
+                        <img src="現況/現況圖1.jpg" alt="基地現況" onerror="this.style.display='none'">
+                        <span>s</span>
+                    </div>
+                </div>
+                <p class="caption">基地現況：明德大樓與高架橋對視覺之壓迫</p>
+            </div>
+        </div>
+
+        <!-- 歷史圖資 -->
+        <div class="bg-white/50 p-8 border border-stone-200 shadow-sm rounded-sm">
+            <h4 class="font-bold text-lg mb-6 flex items-center">
+                <span class="w-8 h-[1px] bg-amber-900 mr-4"></span> 旭川河的演變 — 歷史圖資
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="old-photo mb-1"><div class="img-placeholder aspect-square"><img src="歷史圖資/1905.jpg" alt= onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">1905 市區改正計畫</p>
+                </div>
+                <div class="text-center">
+                    <div class="old-photo mb-1"><div class="img-placeholder aspect-square"><img src="歷史圖資/國門.jpg" alt="" onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">國門意象</p>
+                </div>
+                <div class="text-center">
+                    <div class="old-photo mb-1"><div class="img-placeholder aspect-square"><img src="歷史圖資/旭橋.jpg" alt="1974" onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">旭橋</p>
+                </div>
+                <div class="text-center">
+                    <div class="old-photo mb-1"><div class="img-placeholder aspect-square"><img src="歷史圖資/鱟公母.png" alt="2023" onerror="this.style.display='none'"><span></span></div></div>
+                    <p class="caption">鱟公母島</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     參、問題分析及解決策略  ←  新增章節
+     ══════════════════════════════════════════════════════ -->
+<section id="strategy" class="strategy-section py-24 px-6">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- 章節標題 -->
+        <div class="text-center mb-20">
+            <span class="text-[10px] font-bold tracking-[0.4em] text-emerald-400 uppercase block mb-3">Chapter III</span>
+            <h3 class="text-4xl font-bold text-stone-100 section-title" style="color:#f4f1ea;">
+                問題分析及解決策略
+            </h3>
+        </div>
+
+        <!-- 上排：問題診斷 -->
+        <div class="mb-16">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-[9px] font-bold tracking-[0.4em] uppercase text-amber-600">Problem Analysis</span>
+                <div class="flex-1 h-[1px] bg-amber-900/30"></div>
+            </div>
+
+            <!-- 整體問題 -->
+            <p class="text-[9px] tracking-[0.35em] uppercase text-stone-500 mb-4">整體問題</p>
+            <div class="grid md:grid-cols-3 gap-4 mb-8">
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-3">整體 · I</span>
+                    <h5 class="text-sm font-bold text-stone-200 mb-2 tracking-wider">集體記憶不再</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">旭川河加蓋後，河港記憶與崁仔頂文化印象從市民日常生活中逐漸消失，城市失去與河流相遇的歷史敘事。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-3">整體 · II</span>
+                    <h5 class="text-sm font-bold text-stone-200 mb-2 tracking-wider">缺乏國家門戶意象</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">郵輪入港首見的城市界面雜亂無章，無法呈現基隆山河海特色，缺乏能代表城市身份的清晰門戶形象。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-3">整體 · III</span>
+                    <h5 class="text-sm font-bold text-stone-200 mb-2 tracking-wider">政府政策導致喪失城市個性</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed">歷年建設多集中港區，忽略舊市街的縫合，政策驅動的空間開發反而削弱了基隆原有的城市紋理與個性。</p>
+                </div>
+            </div>
+
+            <!-- 基地問題 -->
+            <p class="text-[9px] tracking-[0.35em] uppercase text-stone-500 mb-4">基地問題</p>
+            <div class="grid md:grid-cols-5 gap-3">
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-2">基地 · I</span>
+                    <h5 class="text-[11px] font-bold text-stone-200 mb-1">公共空間稀缺</h5>
+                    <p class="text-[10px] text-stone-500 leading-relaxed">人口密集，街區一帶幾乎無綠地或開放空間。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-2">基地 · II</span>
+                    <h5 class="text-[11px] font-bold text-stone-200 mb-1">缺乏綠地空間</h5>
+                    <p class="text-[10px] text-stone-500 leading-relaxed">街區一帶綠地稀缺，市民日常生活缺乏可親近的綠意環境與休憩場域。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-2">基地 · III</span>
+                    <h5 class="text-[11px] font-bold text-stone-200 mb-1">市港串聯不足</h5>
+                    <p class="text-[10px] text-stone-500 leading-relaxed">建設多集中港區，舊市街與港口之間動線破碎。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-2">基地 · IV</span>
+                    <h5 class="text-[11px] font-bold text-stone-200 mb-1">交通壅擠人車爭道</h5>
+                    <p class="text-[10px] text-stone-500 leading-relaxed">高架橋下與周邊路段人車混流，步行體驗惡劣。</p>
+                </div>
+                <div class="strategy-problem-card">
+                    <span class="text-[8px] tracking-[0.3em] text-amber-700 font-bold uppercase block mb-2">基地 · V</span>
+                    <h5 class="text-[11px] font-bold text-stone-200 mb-1">白天人流不易聚集</h5>
+                    <p class="text-[10px] text-stone-500 leading-relaxed">崁仔頂深夜漁市與日間商業活動嚴重割裂，白天冷清。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中排：解決策略 -->
+        <div class="mb-16">
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-[9px] font-bold tracking-[0.4em] uppercase text-emerald-500">Design Strategy</span>
+                <div class="flex-1 h-[1px] bg-emerald-900/40"></div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="strategy-solution-card">
+                    <span class="strategy-solution-num">Strategy · 01</span>
+                    <h5 class="text-base font-bold text-stone-100 mb-3 tracking-wider">重塑</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed mb-4">利用基隆特色元素，重新形塑城市獨特紋理。援引鱟嶼、旭川、官道、崁仔頂、八景等地域記憶，透過拆除、量體縮減、局部保留，釋放三連棟的空間潛力。</p>
+                    <div class="border-t border-emerald-900/30 pt-3 mt-3">
+                        <p class="text-[9px] tracking-[0.2em] text-emerald-600 uppercase">關鍵手法</p>
+                        <p class="text-[10px] text-stone-500 mt-1">鱟嶼凝煙裝置 · 旭橋復刻 · 獅嶺匝雲複層平台</p>
+                    </div>
+                </div>
+                <div class="strategy-solution-card">
+                    <span class="strategy-solution-num">Strategy · 02</span>
+                    <h5 class="text-base font-bold text-stone-100 mb-3 tracking-wider">縫合</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed mb-4">釋放綠意、縫合市港：透過開放空間的轉化，讓山、海、城重拾緊密共生，將基隆的土地脈動，重新交織於市民的日常行走之間。</p>
+                    <div class="border-t border-emerald-900/30 pt-3 mt-3">
+                        <p class="text-[9px] tracking-[0.2em] text-emerald-600 uppercase">關鍵手法</p>
+                        <p class="text-[10px] text-stone-500 mt-1">旭川開蓋 · 官道廊道 · 廣場串聯 · 高架廊道</p>
+                    </div>
+                </div>
+                <div class="strategy-solution-card">
+                    <span class="strategy-solution-num">Strategy · 03</span>
+                    <h5 class="text-base font-bold text-stone-100 mb-3 tracking-wider">門戶</h5>
+                    <p class="text-[11px] text-stone-400 leading-relaxed mb-4">維護山、河、港、城之景觀，營造門戶意象。以明德廣場的鱟嶼裝置作為郵輪入港第一印象，建立獅球嶺（山）─旭川（河）─基隆港（海）的縱向視覺軸線。</p>
+                    <div class="border-t border-emerald-900/30 pt-3 mt-3">
+                        <p class="text-[9px] tracking-[0.2em] text-emerald-600 uppercase">關鍵手法</p>
+                        <p class="text-[10px] text-stone-500 mt-1">山河海縱軸 · 明德廣場門戶 · 景觀眺望台</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 下排：區段定位與操作方向 -->
+        <div>
+            <div class="flex items-center gap-4 mb-8">
+                <span class="text-[9px] font-bold tracking-[0.4em] uppercase text-stone-500">Zone Positioning</span>
+                <div class="flex-1 h-[1px] bg-stone-700"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-10 items-start">
+                <!-- 軸線說明 -->
+                <div>
+                    <p class="text-[11px] text-stone-400 leading-relaxed mb-6">
+                        利用縱軸去規劃後續主題，軸線方向對齊河的流向、海的方向。隨著基地往海的反方向深入市區，基地的風景慢慢地從河港的風貌轉變為老基隆的生活地景。
+                    </p>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-[9px] tracking-[0.2em] text-stone-500 mb-2">
+                            <span>基隆港 · 出海口</span>
+                            <span>仁愛市場 · 深入市區</span>
+                        </div>
+                        <div class="axis-line"></div>
+                        <div class="flex justify-between text-[9px] tracking-[0.15em] mt-2">
+                            <span class="text-amber-700">港口意象</span>
+                            <span class="text-stone-500">→</span>
+                            <span class="text-stone-400">生活地景</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 space-y-3">
+                        <div class="flex items-start gap-3 p-3 border border-stone-800 hover:border-amber-900/50 transition-colors">
+                            <span class="text-[8px] font-bold tracking-[0.2em] text-amber-700 uppercase mt-0.5 min-w-[3rem]">明德段</span>
+                            <p class="text-[10px] text-stone-400 leading-relaxed">位於港口帶，郵輪入港首當其衝的基隆印象。山河海的軸線之上，為迎向世界的展示平台。以鱟嶼凝煙形塑港都門戶意象。</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 border border-stone-800 hover:border-amber-900/50 transition-colors">
+                            <span class="text-[8px] font-bold tracking-[0.2em] text-amber-700 uppercase mt-0.5 min-w-[3rem]">親民段</span>
+                            <p class="text-[10px] text-stone-400 leading-relaxed">位於市中心，被慶安宮及福德宮兩座古廟所包圍，展示當地起源中心與民間信仰，官道串聯與飲食文化地景並陳。</p>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 border border-stone-800 hover:border-amber-900/50 transition-colors">
+                            <span class="text-[8px] font-bold tracking-[0.2em] text-amber-700 uppercase mt-0.5 min-w-[3rem]">至善段</span>
+                            <p class="text-[10px] text-stone-400 leading-relaxed">深入市區，鄰近委託行與仁愛市場，充分展現基地的生命力。以獅嶺匝雲複層平台展現當地民眾的生活日常感。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 區段定位視覺 -->
+                <div class="border border-stone-800 p-6">
+                    <p class="text-[9px] tracking-[0.3em] uppercase text-stone-500 mb-5">三大區段 · 主題定位</p>
+                    <div class="space-y-4">
+                        <div class="flex items-stretch gap-4">
+                            <div class="w-1 bg-amber-800 flex-shrink-0 rounded-full"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-bold text-stone-200 tracking-widest uppercase">I &nbsp;·&nbsp; 明德</span>
+                                    <span class="text-[8px] tracking-[0.15em] text-amber-700 border border-amber-900/40 px-2 py-0.5">港都門戶意象</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="zone-badge"><span class="dot" style="background:#92400e;"></span>觀景複層平台</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#92400e;"></span>山河海軸線交匯</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#92400e;"></span>河港城市眺望台</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-stretch gap-4">
+                            <div class="w-1 bg-teal-800 flex-shrink-0 rounded-full"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-bold text-stone-200 tracking-widest uppercase">II &nbsp;·&nbsp; 親民</span>
+                                    <span class="text-[8px] tracking-[0.15em] text-emerald-600 border border-emerald-900/40 px-2 py-0.5">港都精神</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="zone-badge"><span class="dot" style="background:#0f766e;"></span>旭橋再現</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#0f766e;"></span>散飲攤文化</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#0f766e;"></span>古今文化交融</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-stretch gap-4">
+                            <div class="w-1 bg-stone-600 flex-shrink-0 rounded-full"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-bold text-stone-200 tracking-widest uppercase">III &nbsp;·&nbsp; 至善</span>
+                                    <span class="text-[8px] tracking-[0.15em] text-stone-400 border border-stone-700 px-2 py-0.5">老雞籠生活地景</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="zone-badge"><span class="dot" style="background:#78716c;"></span>獅嶺匝雲</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#78716c;"></span>城市博物館</span>
+                                    <span class="zone-badge"><span class="dot" style="background:#78716c;"></span>鄰里公園</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-5 border-t border-stone-800">
+                        <p class="text-[9px] tracking-[0.3em] uppercase text-stone-500 mb-3">高架橋空間延伸</p>
+                        <p class="text-[10px] text-stone-400 leading-relaxed">高架橋其中兩個車道轉化為高空文化廊道，以「崁」的意象重新詮釋這條從過去走向未來的城市時間軸線，串聯高砂公園、獅嶺匝雲、官道文化、鱟嶼凝煙至基隆港。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- 肆、設計手法 -->
+<section id="design" class="py-24 bg-stone-200 border-y border-stone-300">
+    <div class="max-w-[1600px] mx-auto px-6">
+        <div class="text-center mb-16">
+            <span class="text-[10px] font-bold tracking-[0.4em] text-amber-900 uppercase block mb-3">Chapter IV</span>
+            <h3 class="text-4xl font-bold text-stone-900 section-title">設計手法：空間演譯</h3>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-10 items-start">
+            <!-- 左導覽圖 -->
+            <div class="lg:col-span-3 bg-white p-6 border border-stone-300 shadow-xl rounded-sm sticky top-24">
+                <div class="bg-stone-50 aspect-[3/4] p-4 relative overflow-hidden flex items-center justify-center">
+                    <svg viewBox="0 0 500 800" class="w-full h-full">
+                        <rect x="0" y="0" width="500" height="150" fill="#d1c7b7" opacity="0.3" />
+                        <circle onclick="showDesignDetail('mingde')" class="hotspot fill-stone-800" cx="250" cy="220" r="16" />
+                        <text x="290" y="225" fill="#1c1917" font-size="16" font-weight="bold">I · 明德段</text>
+                        <circle onclick="showDesignDetail('qinmin')" class="hotspot fill-stone-800" cx="250" cy="420" r="16" />
+                        <text x="290" y="425" fill="#1c1917" font-size="16" font-weight="bold">II · 親民段</text>
+                        <circle onclick="showDesignDetail('zhishan')" class="hotspot fill-stone-800" cx="250" cy="620" r="16" />
+                        <text x="290" y="625" fill="#1c1917" font-size="16" font-weight="bold">III · 至善段</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 右詳情面板 -->
+            <div class="lg:col-span-9">
+                <div id="design-placeholder" class="h-[600px] border-2 border-dashed border-stone-400 flex items-center justify-center text-stone-400 italic text-sm rounded-sm bg-white/30 uppercase tracking-widest">
+                    Select a section to explore the logic
+                </div>
+
+                <div id="design-panel" class="hidden fade-in-up space-y-16">
+                    <div class="border-b-2 border-amber-900/20 pb-10">
+                        <h4 id="detail-title" class="text-5xl font-bold text-stone-900 tracking-widest mb-4 uppercase"></h4>
+                        <p id="detail-desc" class="text-stone-500 leading-loose text-base italic max-w-4xl"></p>
+                    </div>
+
+                    <!-- 視覺演譯視窗 (所有分區均採用此樣式) -->
+                    <div class="space-y-6">
+                        <div class="text-[10px] font-bold text-amber-900 tracking-widest uppercase flex items-center">
+                            <span class="w-8 h-[1px] bg-amber-900 mr-4"></span> 01. Visual Synthesis / 空間生成與透視再現
+                        </div>
+                        <div class="zs-visual-stack shadow-2xl">
+                            <!-- 背景透視主圖 (原圖亮度，點擊放大) -->
+                            <div class="zs-gallery-bg" onclick="openLightbox(document.getElementById('zs-main-img-src').src)">
+                                <img id="zs-main-img-src" src="" alt="Main" onerror="this.style.opacity='0.1'">
+                            </div>
+                            
+                            <!-- 主透視標題與解說 -->
+                            <div class="zs-persp-info">
+                                <div id="zs-persp-title">透視圖標題</div>
+                                <div id="zs-persp-desc">詳細空間說明文字</div>
+                            </div>
+
+                            <!-- 16:9 生成動畫浮層 (左下角，放大1.5倍) -->
+                            <div class="zs-anim-overlay shadow-inner">
+                                <div class="zs-anim-label"><h6>Generation Phase</h6></div>
+                                <div class="zs-frames-container">
+                                    <div class="zs-frames" id="zs-frames"></div>
+                                </div>
+                                <div class="zs-anim-caption-box"><div id="zs-anim-desc">...</div></div>
+                                <div class="zs-anim-controls">
+                                    <div class="zs-dots" id="zs-dots"></div>
+                                    <button class="text-white/40 hover:text-white text-[9px] font-bold transition" id="zs-play-btn" onclick="zsAnimTogglePlay()">▶</button>
+                                </div>
+                            </div>
+
+                            <!-- 右下縮圖導覽 (點選切換主圖) -->
+                            <div class="zs-gallery-nav" id="zs-thumb-nav"></div>
+                        </div>
+                    </div>
+
+                    <!-- 中：分區平面 (寬幅) -->
+                    <div class="space-y-6">
+                        <div class="text-[10px] font-bold text-amber-900 tracking-widest uppercase flex items-center">
+                            <span class="w-8 h-[1px] bg-amber-900 mr-4"></span> 02. Site Plan / 分區平面規劃
+                        </div>
+                        <div class="old-photo cursor-zoom-in group" onclick="openLightbox(this.querySelector('img').src)">
+                            <div id="plan-container" class="img-placeholder aspect-[21/9]">
+                                <img src="" alt="Plan" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                <span class="group-hover:text-amber-900 transition-colors uppercase tracking-widest text-[10px]">[ SITE PLAN ]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 伍、展望未來 -->
+<section id="future" class="py-40 bg-stone-950 text-white relative overflow-hidden">
+    <div class="max-w-[1600px] mx-auto px-10 relative z-10">
+        <div class="grid lg:grid-cols-12 gap-12 items-start">
+            <!-- 左側/中央主要視圖 -->
+            <div class="lg:col-span-8">
+                <div class="w-full overflow-hidden shadow-[0_50px_150px_rgba(0,0,0,0.9)] border border-stone-800 cursor-zoom-in group relative" onclick="openLightbox('未來/鳥瞰圖.png')">
+                    <div class="img-placeholder aspect-[9/14] bg-stone-900">
+                        <img src="未來/鳥瞰圖.png" alt="Final Vision" class="w-full h-full object-cover opacity-100 transition-all duration-1000 group-hover:scale-105" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右上方文字區域 -->
+            <div class="lg:col-span-4 space-y-10 pt-10 text-right lg:text-left">
+                <div>
+                    <span class="text-amber-500 text-[9px] font-bold tracking-[0.5em] uppercase block mb-4">Future Vision</span>
+                    <h3 class="text-4xl md:text-5xl font-bold tracking-[0.4em] text-white uppercase">山 · 河<br>海 · 城</h3>
+                    <div class="h-[1.5px] w-16 bg-amber-900 mt-8 ml-auto lg:ml-0"></div>
+                </div>
+                <p class="text-stone-400 leading-loose text-lg italic font-light max-w-sm ml-auto lg:ml-0">
+                    「一段關於水的敘述，在時間的堆疊中重新啟航。<br><br>透過設計，重新找回基隆與河流相遇的那一刻。」
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-24 bg-black text-stone-600 text-center">
+    <div class="text-stone-500 text-lg font-bold tracking-widest mb-6 uppercase">敘川 NARRATING THE RIVER</div>
+    <p class="text-[10px] opacity-40">指導教授：陳建名 博士</p>
+</footer>
+
+<script>
+const TOTAL_FRAMES = 10;
+let zsAnimCur = 0;
+let zsAnimTimer = null;
+
+/* ── 設計數據資料庫 ── */
+const designData = {
+    'mingde': {
+        title: '明德段：河港風貌地景',
+        desc: '設計核心：鱟嶼凝煙。重塑出海口景觀門戶，縫合市港邊界。',
+        plan: 'images/mingde-plan.jpg',
+        animCaps: Array(10).fill(0).map((_, i) => `明德段生成分析 PHASE ${i+1}：探討出海口與潮汐之空間轉化過程。`),
+        gallery: [
+            { src: '明德/明德平面.png', title: ' 明德平面', desc: '保留基地中的明德橋遺構。' },
+            { src: '明德/開蓋.png', title: '局部開蓋', desc: '展現旭川河與基隆港銜接之門戶意象。' },
+            { src: '明德/鱟嶼意象.png', title: '鱟嶼凝煙', desc: '以鱟嶼切片透光玻璃化石與水深鋪面，輔互動水霧，重現「鱟嶼凝煙」意象。' },
+            { src: '明德/親水平台.png', title: '親水平台', desc: '設置強化玻璃地坪，讓市民直觀感受腳下流水。' },
+            { src: '明德/駁坎.png', title: '駁崁', desc: '河面的開蓋使得日治時期，旭川運河的駁坎露出，。' },
+            { src: '明德/觀景平台.png', title: '休憩平台', desc: '透過拆除以及局部保留，使建築量體大幅縮小。' },
+        ]
+    },
+    'qinmin': {
+        title: '親民段：飲食文化地景',
+        desc: '設計核心：旭橋復刻。轉譯歷史旭橋的幾何語彙，建構橫向跨越河道與縱向連結高架橋的動線，重現橋與河的空間關係。',
+        plan: '親民/親民平面.png',
+        animCaps: Array(20).fill(0).map((_, i) => `親民段生成分析 PHASE ${i+1}：舊市區生活機能之垂直疊加與轉譯。`),
+        gallery: [
+            { src: '親民/親民平面.png', title: '旭橋再現', desc: '重新塑造橋梁與河流之間的空間關系，勾勒橋梁與河流之間那繾綣的空間情愫。' },
+            { src: '親民/親民咖啡座.png', title: '景觀咖啡區', desc: '建築機能在大量拆除時，二樓以及三樓則作為餐飮以及彈性使用之空間。' },
+            { src: '親民/河中咖啡.png', title: '河中咖啡座', desc: '疊層波紋玻璃模擬旭川河水，以透光波影打造如置身河中的餐飲空間。' },
+            { src: '親民/連橋.png', title: '連橋空間', desc: '轉為開方式空間，連接至善大樓。' },
+            { src: '親民/旭橋.png', title: '旭橋再現', desc: '重建已消失在出海口的旭橋，同時串聯東岸高架橋。' },
+                   ]
+    },
+    'zhishan': {
+        title: '至善段：城市生活博物館',
+        desc: '設計核心：城市博物館串連生活場域與城市公共空間，將人們的生活體驗與城市的韻律相戶融合。',
+        plan: '至善/至善.jpg',
+        animCaps: [
+            "01. 基礎結構定位","02. 立面量體削落","03. 垂直動線導入","04. 多層次平台建構",
+            "05. 植栽基盤設置","06. 自動化灌溉規劃","07. 獅嶺匝雲霧系統","08. 展示廊道規劃",
+            "09. 舊產業空間復刻"        ],
+        gallery: [
+            { src: '至善/至善平面.png', title: '至善俯瞰圖', desc: '城市博物館串連生活場域與城市公共空間，將人們的生活體驗與城市的韻律相戶融合。' },
+            { src: '至善/山意綿延.png', title: '山意綿延', desc: '將至善大樓打造為基地中的獅球嶺，同時回應過去基隆八景之一的獅嶺匝雲以及基地之於山、河、海的關係。' },
+            { src: '至善/櫥窗立面.png', title: '櫥窗立面', desc: '保留舊大樓的特色立，及以玻璃作為可透視的立面並將部分立面設置窗。' },
+            { src: '至善/獅嶺匝雲.png', title: '獅嶺匝雲', desc: '透過高層噴霧系統，再現基隆八景之一的雲霧意象。' },
+            { src: '至善/至善廣場.png', title: '至善廣場', desc: '藉由切角退縮以及空間挑高，同時形成供附近鄰里居民使用的街角廣場。' },
+            { src: '至善/切角.png', title: '切角退縮', desc: '藉由切角退縮以及空間挑高解決至善大樓距離高架橋太近所導致的空間壓迫感。' },
+        ]
+    }
+};
+
+function showDesignDetail(id) {
+    const data = designData[id];
+    const panel = document.getElementById('design-panel');
+    document.getElementById('design-placeholder').classList.add('hidden');
+    panel.classList.remove('hidden');
+
+    document.getElementById('detail-title').innerText = data.title;
+    document.getElementById('detail-desc').innerText  = data.desc;
+    document.querySelector('#plan-container img').src = data.plan;
+
+    // 動態生成 20 張動畫幀 (採用 PNG 格式以保證透明度與質量)
+    const fWrap = document.getElementById('zs-frames');
+    const dWrap = document.getElementById('zs-dots');
+    fWrap.innerHTML = ''; dWrap.innerHTML = '';
+    for(let i=1; i<=TOTAL_FRAMES; i++) {
+        fWrap.innerHTML += `<div class="zs-frame"><img src="${id}/anim_${i}.png" onerror="this.src='${id}/anim_${i}.jpg'; this.onerror=null;"></div>`;
+        dWrap.innerHTML += `<div class="zs-dot ${i===1?'active':''}" onclick="zsAnimGo(${i-1})"></div>`;
+    }
+
+    // 更新 8 張縮圖畫廊
+    const thumbNav = document.getElementById('zs-thumb-nav');
+    thumbNav.innerHTML = '';
+    data.gallery.forEach((item, idx) => {
+        const active = idx === 0 ? 'active' : '';
+        thumbNav.innerHTML += `<div class="zs-thumb-card ${active}" onclick="zsSelectThumb(${idx}, '${item.src}', '${item.title}', '${item.desc}', this)">
+            <img src="${item.src}" onerror="this.style.opacity='0.1'">
+        </div>`;
+    });
+
+    // 初始化第一張顯示
+    zsSelectThumb(0, data.gallery[0].src, data.gallery[0].title, data.gallery[0].desc, thumbNav.children[0]);
+    zsAnimCur = 0; zsAnimGo(0); zsStopPlay();
+
+    panel.style.animation = 'none';
+    panel.offsetHeight;
+    panel.style.animation = 'fadeInUp 0.8s ease forwards';
+}
+
+function zsSelectThumb(idx, src, title, desc, el) {
+    document.querySelectorAll('.zs-thumb-card').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const mainImg = document.getElementById('zs-main-img-src');
+    
+    // 瞬間切換確保無殘影並維持 1.0 透明度 (原圖效果)
+    mainImg.src = src;
+    mainImg.style.opacity = '1';
+    
+    document.getElementById('zs-persp-title').innerText = title || "Proposal Detail";
+    document.getElementById('zs-persp-desc').innerText = desc || "Keelung Waterfront Analysis View";
+}
+
+function zsAnimGo(n) {
+    const titleText = document.getElementById('detail-title').innerText;
+    const sectionKey = titleText.includes('明德') ? 'mingde' : titleText.includes('親民') ? 'qinmin' : 'zhishan';
+    const data = designData[sectionKey];
+    zsAnimCur = n;
+    document.getElementById('zs-frames').style.transform = `translateX(-${n * 100}%)`;
+    document.querySelectorAll('.zs-dot').forEach((d, i) => d.classList.toggle('active', i === n));
+    // 文字同步更新
+    document.getElementById('zs-anim-desc').innerText = data.animCaps[n] || `Phase ${n+1}`;
+}
+
+function zsAnimTogglePlay() {
+    const btn = document.getElementById('zs-play-btn');
+    if (zsAnimTimer) { zsStopPlay(); } 
+    else {
+        btn.innerText = '⏸';
+        zsAnimTimer = setInterval(() => {
+            zsAnimCur = (zsAnimCur + 1) % TOTAL_FRAMES;
+            zsAnimGo(zsAnimCur);
+        }, 400);
+    }
+}
+function zsStopPlay() { clearInterval(zsAnimTimer); zsAnimTimer = null; document.getElementById('zs-play-btn').innerText = '▶'; }
+
+function openLightbox(src) { 
+    if(!src || src.includes('undefined')) return;
+    document.getElementById('lightbox-img').src = src; 
+    document.getElementById('lightbox').style.display = 'flex'; 
+}
+
+/* ── 歷史標籤觀察者 ── */
+function updateHistory(id) {
+    const historyData = {
+        'qing': { title: '清領時期：自然流道', desc: '，該地自淸治時期以來，即為漁船靠岸、卸貨的地點。現在則是位於基隆市孝一路一帶。。' },
+        'japan': { title: '日治時期：築港規範', desc: '1920年代築港工程將河道整流，旭川的面貌以及街區的輪廓都有了完整方正的樣貌。' },
+        'republic': { title: '民國時期：消失水面', desc: '1978年為解決空間不足興建三連棟大樓，使旭川河徹底消失於世人眼中。' }
+    };
+    const data = historyData[id];
+    document.querySelectorAll('.layer-stack').forEach(el => el.classList.remove('active'));
+    document.getElementById('layer-' + id).classList.add('active');
+    document.getElementById('h-title').innerText = data.title;
+    document.getElementById('h-desc').innerText  = data.desc;
+}
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('fade-in-up'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('section').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
